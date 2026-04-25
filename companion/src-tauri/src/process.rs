@@ -7,6 +7,9 @@ use std::path::PathBuf;
 use std::time::SystemTime;
 use sysinfo::System;
 
+#[cfg(windows)]
+use windows::Win32::UI::WindowsAndMessaging::GetWindowThreadProcessId;
+
 /// A candidate process that may be running an opencode subagent.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PidCandidate {
@@ -126,6 +129,64 @@ pub fn discover_pids_impl() -> Vec<PidCandidate> {
 
     println!("[DEBUG discover_pids] Could not extract PID from path");
     Vec::new()
+}
+
+/// Check if a process name matches OpenCode main process patterns.
+/// Matches: "opencode", "OpenCode", "opencode.exe", "opencode-cli", etc.
+/// Does NOT match: "opencode-helper", "my-opencode", etc.
+pub fn is_opencode_main_process(name: &str) -> bool {
+    let lower = name.to_lowercase();
+
+    // Strip .exe if present
+    let base = lower.strip_suffix(".exe").unwrap_or(&lower);
+
+    // Must be exactly "opencode" or start with "opencode-" followed by only letters
+    // This allows "opencode" and "opencode-cli" but rejects "opencode-helper", "my-opencode", etc.
+    if base == "opencode" {
+        return true;
+    }
+
+    if base.starts_with("opencode-") {
+        let suffix = &base[9..];
+        // suffix should be only letters (a-z) - no underscores, no additional hyphens
+        return suffix.chars().all(|c| c.is_ascii_lowercase());
+    }
+
+    false
+}
+
+/// Check if a window (HWND) belongs to an OpenCode process.
+/// Uses Win32 GetWindowThreadProcessId to get the PID from HWND,
+/// then checks if the process name matches OpenCode.
+#[cfg(windows)]
+pub fn is_opencode_window(hwnd: isize) -> bool {
+    let mut process_id: u32 = 0;
+
+    unsafe {
+        GetWindowThreadProcessId(
+            windows::Win32::Foundation::HWND(hwnd as *mut std::ffi::c_void),
+            Some(&mut process_id),
+        );
+    }
+
+    if process_id == 0 {
+        return false;
+    }
+
+    let mut sys = System::new();
+    sys.refresh_processes(sysinfo::ProcessesToUpdate::All, true);
+
+    if let Some(process) = sys.process(sysinfo::Pid::from_u32(process_id)) {
+        let name = process.name().to_string_lossy();
+        is_opencode_main_process(&name)
+    } else {
+        false
+    }
+}
+
+#[cfg(not(windows))]
+pub fn is_opencode_window(_hwnd: isize) -> bool {
+    false
 }
 
 #[cfg(test)]

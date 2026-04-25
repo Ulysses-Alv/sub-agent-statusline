@@ -3,10 +3,11 @@ mod state;
 mod watcher;
 
 use std::sync::{Arc, Mutex};
-use tauri::{AppHandle, Emitter};
+use tauri::{AppHandle, Emitter, Manager};
 use tokio::sync::mpsc as tokio_mpsc;
+use tokio::time::{interval, Duration};
 
-use process::{discover_pids_impl, PidCandidate};
+use process::{discover_pids_impl, is_opencode_window, PidCandidate};
 use state::{delete_child as delete_child_impl, AppState, SharedAppState, StatuslineState};
 use watcher::{read_state_now as read_state_now_impl, StateWatcher, WatchEvent};
 use tauri_plugin_store::StoreExt;
@@ -107,6 +108,19 @@ async fn delete_child(pid: i32, child_id: String) -> Result<(), String> {
     delete_child_impl(pid as u32, &child_id)
 }
 
+/// Tauri command: Set the always-on-top property of the companion window.
+#[tauri::command]
+async fn set_always_on_top(
+    enabled: bool,
+    shared_state: tauri::State<'_, SharedAppState>,
+) -> Result<(), String> {
+    let state = shared_state.lock().map_err(|e| e.to_string())?;
+    if let Some(window) = &state.window {
+        window.set_always_on_top(enabled).map_err(|e| e.to_string())?;
+    }
+    Ok(())
+}
+
 /// Tauri command: Save the window position to persistent store.
 /// Uses the app's managed store to persist position.
 #[tauri::command]
@@ -178,13 +192,41 @@ pub fn run() {
             delete_child,
             save_window_position,
             load_window_position,
+            set_always_on_top,
         ])
-        .setup(|app| {
+        .setup(move |app| {
             let handle = app.handle().clone();
+
+            // Store the main window in AppState for set_always_on_top access
+            if let Some(window) = app.get_webview_window("main") {
+                let mut state = app.state::<SharedAppState>();
+                let mut state = state.lock().unwrap();
+                state.set_window(window);
+            }
+
+            let handle_for_pids = handle.clone();
             tauri::async_runtime::spawn(async move {
                 let pids = discover_pids_impl();
-                let _ = handle.emit("pids-changed", pids);
+                let _ = handle_for_pids.emit("pids-changed", pids);
             });
+
+            let handle_for_polling = handle.clone();
+            tauri::async_runtime::spawn(async move {
+                let mut poll_interval = interval(Duration::from_millis(1500));
+                loop {
+                    poll_interval.tick().await;
+                    let is_opencode = is_opencode_window(unsafe {
+                        windows::Win32::UI::WindowsAndMessaging::GetForegroundWindow()
+                            .0 as isize
+                    });
+                    let state = handle_for_polling.state::<SharedAppState>();
+                    let state = state.lock().unwrap();
+                    if let Some(window) = &state.window {
+                        let _ = window.set_always_on_top(is_opencode);
+                    };
+                }
+            });
+
             Ok(())
         })
         .run(tauri::generate_context!())

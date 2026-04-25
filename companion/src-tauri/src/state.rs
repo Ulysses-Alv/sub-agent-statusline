@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
 use std::sync::Mutex;
+use tauri::WebviewWindow;
 
 use crate::watcher::StateWatcher;
 
@@ -71,6 +72,8 @@ pub struct AppState {
     pub watching: bool,
     /// The file watcher (kept alive to prevent dropping)
     pub watcher: Option<StateWatcher>,
+    /// The app window handle for set_always_on_top
+    pub window: Option<WebviewWindow>,
 }
 
 impl AppState {
@@ -82,12 +85,18 @@ impl AppState {
             last_valid_state: None,
             watching: false,
             watcher: None,
+            window: None,
         }
     }
 
     /// Set the current PID being watched.
     pub fn set_pid(&mut self, pid: Option<u32>) {
         self.current_pid = pid;
+    }
+
+    /// Set the window handle for always_on_top control.
+    pub fn set_window(&mut self, window: WebviewWindow) {
+        self.window = Some(window);
     }
 
     /// Get a reference to the current state.

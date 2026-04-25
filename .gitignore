@@ -1,5 +1,8 @@
 node_modules/
 dist/
+companion/src-tauri/target/
+companion/dist/
 *.log
 *.tmp
 .DS_Store
+.atl/

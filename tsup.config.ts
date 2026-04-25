@@ -13,9 +13,11 @@ export default defineConfig([
         index: "src/index.ts",
       },
     },
-    bundle: false,
+    bundle: true,
+    splitting: false,
     clean: true,
     outDir: "dist",
+    external: ["@opencode-ai/plugin"],
   },
   {
     entry: {

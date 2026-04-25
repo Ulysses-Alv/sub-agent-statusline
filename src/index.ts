@@ -11,7 +11,7 @@ import {
   shouldPreserveStateOnStartup,
 } from "./state.js";
 
-export const SubagentStatusline: Plugin = async () => {
+export const server: Plugin = async () => {
   const statePath = resolveStatePath();
   const textPath = resolveTextPath(statePath);
 

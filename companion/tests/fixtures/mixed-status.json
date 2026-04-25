@@ -1,0 +1,36 @@
+{
+  "children": {
+    "agent-1": {
+      "id": "agent-1",
+      "title": "Running Task",
+      "parentID": "main-session",
+      "status": "running",
+      "color": "yellow",
+      "startedAt": "2024-01-01T00:00:00.000Z",
+      "updatedAt": "2024-01-01T00:02:00.000Z"
+    },
+    "agent-2": {
+      "id": "agent-2",
+      "title": "Completed Task",
+      "parentID": "main-session",
+      "status": "done",
+      "color": "green",
+      "startedAt": "2024-01-01T00:00:10.000Z",
+      "updatedAt": "2024-01-01T00:01:30.000Z",
+      "endedAt": "2024-01-01T00:01:30.000Z",
+      "elapsedMs": 80000
+    },
+    "agent-3": {
+      "id": "agent-3",
+      "title": "Failed Task",
+      "parentID": "main-session",
+      "status": "error",
+      "color": "red",
+      "startedAt": "2024-01-01T00:00:20.000Z",
+      "updatedAt": "2024-01-01T00:01:00.000Z",
+      "endedAt": "2024-01-01T00:01:00.000Z",
+      "elapsedMs": 40000
+    }
+  },
+  "updatedAt": "2024-01-01T00:02:00.000Z"
+}

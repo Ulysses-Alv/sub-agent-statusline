@@ -1,0 +1,14 @@
+{
+  "children": {
+    "agent-1": {
+      "id": "agent-1",
+      "title": "Research Task",
+      "parentID": "main-session",
+      "status": "running",
+      "color": "yellow",
+      "startedAt": "2024-01-01T00:00:00.000Z",
+      "updatedAt": "2024-01-01T00:01:00.000Z"
+    }
+  },
+  "updatedAt": "2024-01-01T00:01:00.000Z"
+}

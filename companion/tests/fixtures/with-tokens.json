@@ -1,0 +1,22 @@
+{
+  "children": {
+    "agent-1": {
+      "id": "agent-1",
+      "title": "Token-Intensive Task",
+      "parentID": "main-session",
+      "status": "done",
+      "color": "green",
+      "startedAt": "2024-01-01T00:00:00.000Z",
+      "updatedAt": "2024-01-01T00:05:00.000Z",
+      "endedAt": "2024-01-01T00:05:00.000Z",
+      "elapsedMs": 300000,
+      "tokens": {
+        "input": 15000,
+        "output": 45000,
+        "total": 60000,
+        "contextPercent": 72.5
+      }
+    }
+  },
+  "updatedAt": "2024-01-01T00:05:00.000Z"
+}

@@ -58,6 +58,20 @@ const SubagentRow: Component<SubagentRowProps> = (props) => {
     }
   };
 
+  const handleForceClear = async (e: MouseEvent) => {
+    e.stopPropagation();
+    const confirmed = confirm("Force delete this agent from state.json? This cannot be undone.");
+    if (!confirmed) return;
+    const pid = selectedPid();
+    if (!pid) return;
+    deleteChildSignal(props.child.id);
+    try {
+      await deleteChildCmd(pid, props.child.id);
+    } catch {
+      // Silently ignore - local state already updated
+    }
+  };
+
   return (
     <div
       class={`subagent-row ${expanded() ? "expanded" : ""}`}
@@ -70,6 +84,7 @@ const SubagentRow: Component<SubagentRowProps> = (props) => {
         <Show when={canDelete()}>
           <button class="delete-btn" onClick={handleDelete} title="Remove from list">×</button>
         </Show>
+        <button class="force-clear-btn" onClick={handleForceClear} title="Force delete from state">⚡</button>
       </div>
       <Show when={expanded()}>
         <div class="subagent-meta">

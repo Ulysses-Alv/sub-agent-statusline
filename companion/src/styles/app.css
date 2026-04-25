@@ -113,6 +113,20 @@ body {
   color: #c04040;
 }
 
+.force-clear-btn {
+  background: transparent;
+  border: none;
+  color: #666;
+  font-size: 12px;
+  cursor: pointer;
+  padding: 0 4px;
+  line-height: 1;
+}
+
+.force-clear-btn:hover {
+  color: #e06020;
+}
+
 .pid-selector {
   padding: 8px 4px;
   border-bottom: 1px solid #333;

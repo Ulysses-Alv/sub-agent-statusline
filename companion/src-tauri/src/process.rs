@@ -189,6 +189,23 @@ pub fn is_opencode_window(_hwnd: isize) -> bool {
     false
 }
 
+/// Get the parent PID of the current process.
+/// Returns 0 if no parent found.
+pub fn get_parent_pid() -> u32 {
+    let mut sys = System::new();
+    sys.refresh_processes(sysinfo::ProcessesToUpdate::All, true);
+
+    // Get current process PID
+    let current_pid = std::process::id();
+
+    // Find current process and get its parent PID
+    if let Some(process) = sys.process(sysinfo::Pid::from_u32(current_pid)) {
+        process.parent().map(|p| p.as_u32()).unwrap_or(0)
+    } else {
+        0
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

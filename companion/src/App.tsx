@@ -151,7 +151,7 @@ const App: Component = () => {
         </Show>
       </Show>
 
-      <div class="version-footer">v0.2.0</div>
+      <div class="version-footer">v0.3.0</div>
     </div>
   );
 };

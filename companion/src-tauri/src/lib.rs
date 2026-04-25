@@ -7,9 +7,10 @@ use tauri::{AppHandle, Emitter, Manager};
 use tokio::sync::mpsc as tokio_mpsc;
 use tokio::time::{interval, Duration};
 
-use process::{discover_pids_impl, is_opencode_window, PidCandidate};
+use process::{discover_pids_impl, get_parent_pid, is_opencode_window, PidCandidate};
 use state::{delete_child as delete_child_impl, AppState, SharedAppState, StatuslineState};
 use watcher::{read_state_now as read_state_now_impl, StateWatcher, WatchEvent};
+use tauri_plugin_cli::CliExt;
 use tauri_plugin_store::StoreExt;
 
 /// Tauri command: Discover all running opencode-related processes.
@@ -183,6 +184,7 @@ pub fn run() {
             Some(vec!["--minimized"]),
         ))
         .plugin(tauri_plugin_process::init())
+        .plugin(tauri_plugin_cli::init())
         .manage(shared_state)
         .invoke_handler(tauri::generate_handler![
             discover_pids,
@@ -196,6 +198,27 @@ pub fn run() {
         ])
         .setup(move |app| {
             let handle = app.handle().clone();
+
+            // CLI parsing: check for "open" subcommand
+            if let Ok(matches) = app.cli().matches() {
+                if let Some(subcommand) = &matches.subcommand {
+                    if subcommand.name == "open" {
+                        let app_for_monitoring = app.handle().clone();
+                        tauri::async_runtime::spawn(async move {
+                            let mut interval = tokio::time::interval(Duration::from_millis(2000));
+                            loop {
+                                interval.tick().await;
+                                let parent_pid = get_parent_pid();
+                                if parent_pid == 0 {
+                                    // Parent process no longer exists, exit
+                                    app_for_monitoring.exit(0);
+                                    break;
+                                }
+                            }
+                        });
+                    }
+                }
+            }
 
             // Store the main window in AppState for set_always_on_top access
             if let Some(window) = app.get_webview_window("main") {
